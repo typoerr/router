@@ -2,7 +2,7 @@ import qs from 'querystringify'
 import { PartialMap } from './utils'
 
 /**
- * Return value by regexparam()
+ * Return value from regexparam()
  */
 export interface MatchHint {
   keys: string[]

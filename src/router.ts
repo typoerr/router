@@ -37,9 +37,6 @@ export type Route<T extends object, U> = MiddlewareRoute<T, U> | HandlerRoute<T,
 
 export type ResolveContext<T extends object> = Assign<T, LookUpHint>
 
-/**
- * Next Middleware
- */
 export interface Next<T extends object, U> extends chain.Next<ResolveContext<T>, U> {}
 
 export interface Middleware<T extends object, U> extends chain.Callback<ResolveContext<T>, U> {}

@@ -55,7 +55,6 @@ describe('resolve', () => {
     expect(promise).rejects.toThrowError(new NotFoundError('/b', 'GET'))
   })
 
-  // handler context
   test('handler context', async () => {
     expect.assertions(6)
     type Ctx = { ctx: string }
