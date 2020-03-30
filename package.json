@@ -1,0 +1,66 @@
+{
+  "name": "@typoerr/router",
+  "description": "Universal router",
+  "version": "0.0.1",
+  "author": "typoerr",
+  "license": "MIT",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "LICENCE"
+  ],
+  "homepage": "https://github.com/typoerr/router#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/typoerr/router.git"
+  },
+  "bugs": {
+    "url": "https://github.com/typoerr/router/issues"
+  },
+  "dependencies": {
+    "querystringify": "^2.1.1",
+    "regexparam": "^1.3.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.9.5",
+    "@types/querystringify": "^2.0.0",
+    "@typoerr/eslint-config": "^0.0.27",
+    "eslint": "^6.8.0",
+    "jest": "^25.2.4",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.0.2",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^25.2.1",
+    "ts-node": "^8.8.1",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^3.8.3"
+  },
+  "scripts": {
+    "compile": "run-p compile:*",
+    "compile:esm": "tsc --outDir dist/esm --module esnext",
+    "compile:cjs": "tsc --outDir dist/cjs --module commonjs",
+    "clean": "run-p clean:**",
+    "clean:dist": "rimraf dist",
+    "lint": "eslint src/**/*.ts",
+    "npm-publish": "yarn publish",
+    "release": "run-s test compile npm-publish clean",
+    "test": "jest"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "verbose": true,
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "test/tsconfig.json"
+      }
+    }
+  }
+}
