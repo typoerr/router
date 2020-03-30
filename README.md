@@ -17,11 +17,10 @@ See [lukeed/regexparam: A tiny (308B) utility that converts route patterns into 
 ```ts
 import {route, use, resolve} from '@typoerr/router'
 
-const noopMiddleware = (ctx, next) => {
+const throughMiddleware = (ctx, next) => {
   // `next` is a next-middleware, route-handler or final-handler
   // final-handler: () => Promise.reject(new NotFoundError(ctx.pathname, ctx.method))
-  const result = next(ctx)
-  return result
+  return  next(ctx)
 }
 
 const logMiddleware = (ctx, next) => {
@@ -31,7 +30,7 @@ const logMiddleware = (ctx, next) => {
 }
 
 const routes = [
-  use('/*', [logMiddleware, noopMiddleware])
+  use('/*', [logMiddleware, throughMiddleware])
   route('GET', '/', () => '1'),
   route('POST', '/:id', (ctx) => ctx.params.id),
 ]
