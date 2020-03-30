@@ -4,8 +4,7 @@ import { NotFoundError } from '../src/not-found'
 
 test('route(mehtod, path, handler)', () => {
   const handler = jest.fn()
-  const _route = route('GET', '/path', handler)
-  expect(_route).toStrictEqual({
+  expect(route('GET', '/path', handler)).toStrictEqual({
     path: regexparam('/path'),
     method: 'GET',
     handler,
@@ -14,8 +13,7 @@ test('route(mehtod, path, handler)', () => {
 
 test('route(path, handler)', () => {
   const handler = jest.fn()
-  const _route = route('/path', handler)
-  expect(_route).toStrictEqual({
+  expect(route('/path', handler)).toStrictEqual({
     path: regexparam('/path'),
     method: undefined,
     handler,
@@ -23,8 +21,7 @@ test('route(path, handler)', () => {
 })
 
 test('use', () => {
-  const route = use('/path', [])
-  expect(route).toStrictEqual({
+  expect(use('/path', [])).toStrictEqual({
     path: regexparam('/path'),
     method: '*',
     use: [],
@@ -33,23 +30,23 @@ test('use', () => {
 
 describe('resolve', () => {
   test('match route (path)', async () => {
-    const a = jest.fn(() => 'a')
-    const b = jest.fn(() => 'b')
+    const a = () => 'a'
+    const b = () => 'b'
     const routes = [route('/a', a), route('/b', b)]
     expect(await resolve(routes, { pathname: '/a' })).toBe('a')
     expect(await resolve(routes, { pathname: '/b' })).toBe('b')
   })
 
   test('match route (path + method)', async () => {
-    const a = jest.fn(() => 'a')
-    const b = jest.fn(() => 'b')
+    const a = () => 'a'
+    const b = () => 'b'
     const routes = [route('GET', '/a', a), route('GET', '/b', b)]
     expect(await resolve(routes, { pathname: '/a', method: 'GET' })).toBe('a')
     expect(await resolve(routes, { pathname: '/b', method: 'GET' })).toBe('b')
   })
 
   test('route not found', async () => {
-    const handler = jest.fn(() => 'a')
+    const handler = () => 'a'
     const routes = [route('GET', '/a', handler)]
     const promise = resolve(routes, { pathname: '/b', method: 'GET' })
     expect(promise).rejects.toThrowError(new NotFoundError('/b', 'GET'))
@@ -59,7 +56,7 @@ describe('resolve', () => {
     expect.assertions(6)
     type Ctx = { ctx: string }
 
-    const handler = jest.fn((ctx: HandlerContext<Ctx>) => {
+    const handler = (ctx: HandlerContext<Ctx>) => {
       // context
       expect(ctx.ctx).toBe('a')
       // match context
@@ -69,7 +66,7 @@ describe('resolve', () => {
       expect(ctx.pathname).toBe('/1')
       expect(ctx.search).toBe('k=v')
       expect(ctx.method).toBe('GET')
-    })
+    }
 
     const routes = [route('GET', '/:id', handler)]
     return resolve(routes, { ctx: 'a', pathname: '/1', method: 'GET', search: 'k=v' })
@@ -81,9 +78,9 @@ describe('middleware', () => {
     expect.assertions(1)
     type Ctx = { ctx: string }
 
-    const handler = jest.fn((ctx: HandlerContext<Ctx>) => {
+    const handler = (ctx: HandlerContext<Ctx>) => {
       expect(ctx.ctx).toBe('b')
-    })
+    }
     const middleware: Middleware<Ctx, void> = async (ctx, next) => {
       return next({ ...ctx, ctx: 'b' })
     }
