@@ -6,11 +6,13 @@ export interface Callback<T, U> {
   (ctx: T, next: Next<T, U>): Promise<U>
 }
 
-export function call<T, U>(cbs: Callback<T, U>[], ctx: T, done: Next<T, U>) {
-  function disaptch(pos: number, ctx: T, done: Next<T, U>): Promise<U> {
-    const mw = cbs[pos] || done
-    const next = (c: T) => disaptch(pos + 1, c, done)
-    return new Promise((resolve) => resolve(mw(ctx, next)))
+export function compose<T, U>(callbacks: Callback<T, U>[]) {
+  function dispatch(pos: number, ctx: T, done: Next<T, U>): Promise<U> {
+    const cb = callbacks[pos] || done
+    const next = (ctx: T) => dispatch(pos + 1, ctx, done)
+    return new Promise((resolve) => resolve(cb(ctx, next)))
   }
-  return disaptch(0, ctx, done)
+  return function run(ctx: T, next: Next<T, U>) {
+    return dispatch(0, ctx, next)
+  }
 }
