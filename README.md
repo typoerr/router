@@ -12,46 +12,80 @@ npm i @typoerr/router
 
 See [lukeed/regexparam](https://github.com/lukeed/regexparam)
 
-## Usage
+## Example
+
+### node-http
 
 ```ts
-import { IncomingMessage, ServerResponse, createServer } from 'http'
-import { route, router, Route, NotFoundError } from '@typoerr/router'
+import http from 'http'
+import { route, Route, router } from '@typoerr/router'
 
 interface Context {
-  req: IncomingMessage
-  res: ServerResponse
+  req: http.IncomingMessage
+  res: http.ServerResponse
 }
 
-const routes: Route<Context, void>[] = [
-  // log middleware
-  route('/*', async (ctx, next) => {
-    const result = await next(ctx)
-    console.log({ req: ctx.req, res: ctx.res })
-    return result
-  }),
-
+const routes: Route<Context, any>[] = [
   route('GET', '/', async (ctx) => {
-    ctx.res.end(ctx.req.url)
+    return ctx.res.end(ctx.pathname)
   }),
-  route('GET', '/:id', async (ctx) => {
-    ctx.res.end(ctx.params.id)
+  route('/*', async (ctx) => {
+    ctx.res.statusCode = 302
+    ctx.res.setHeader('Location', '/')
+    return ctx.res.end()
   }),
 ]
 
-const resolve = router(routes)
-
-const server = createServer((req, res) => {
-  const url = req.url!
+const server = http.createServer(async (req, res) => {
+  const url = req.url || '/'
   const method = req.method
-  const context = { req, res, url, method }
   try {
-    resolve(context)
+    await router(routes, { req, res, url, method })
   } catch (err) {
-    if (err instanceof NotFoundError) {
-      res.end('404 Not Found')
+    if (err.status === 404) {
+      return res.end('404 Not Found')
     }
-    res.end('500 Internet Server Error')
+    console.error(err)
+    return res.end('500 Internet Server Error')
+  }
+})
+
+server.listen(3000)
+```
+
+### express
+
+```ts
+import express from 'express'
+import { route, Route, router } from '@typoerr/router'
+
+interface Context {
+  req: express.Request
+  res: express.Response
+}
+
+const routes: Route<Context>[] = [
+  route('GET', '/', async (ctx) => {
+    return ctx.res.send(ctx.req.url)
+  }),
+  route('GET', '/reject', async () => {
+    return Promise.reject(new Error('reject'))
+  }),
+  route('GET', '/error', async () => {
+    throw new Error('error')
+  }),
+]
+
+const server = express()
+
+server.use(async (req, res, next) => {
+  const url = req.url || '/'
+  const method = req.method
+  try {
+    await router(routes, { req, res, url, method })
+  } catch (err) {
+    console.error(err)
+    next(err)
   }
 })
 
