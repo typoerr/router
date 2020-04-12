@@ -1,6 +1,6 @@
 # @typoerr/router
 
-Router for Node.js and browsers.
+Router for Node.js and Browser.
 
 ## Install
 
@@ -10,42 +10,52 @@ npm i @typoerr/router
 
 ## Segments
 
-See [lukeed/regexparam: A tiny (308B) utility that converts route patterns into RegExp. Limited alternative to `path-to-regexp` 🙇‍♂️](https://github.com/lukeed/regexparam)
+See [lukeed/regexparam](https://github.com/lukeed/regexparam)
 
 ## Usage
 
 ```ts
-import {route, use, resolve} from '@typoerr/router'
+import { IncomingMessage, ServerResponse, createServer } from 'http'
+import { route, router, Route, NotFoundError } from '@typoerr/router'
 
-const throughMiddleware = (ctx, next) => {
-  // `next` is a next-middleware, route-handler or final-handler
-  // final-handler: () => Promise.reject(new NotFoundError(ctx.pathname, ctx.method))
-  return  next(ctx)
+interface Context {
+  req: IncomingMessage
+  res: ServerResponse
 }
 
-const logMiddleware = (ctx, next) => {
-  const result = next(ctx)
-  console.log(result)
-  return result
-}
+const routes: Route<Context, void>[] = [
+  // log middleware
+  route('/*', async (ctx, next) => {
+    const result = await next(ctx)
+    console.log({ req: ctx.req, res: ctx.res })
+    return result
+  }),
 
-const routes = [
-  use('/*', [logMiddleware, throughMiddleware])
-  route('GET', '/', () => '1'),
-  route('POST', '/:id', (ctx) => ctx.params.id),
+  route('GET', '/', async (ctx) => {
+    ctx.res.end(ctx.req.url)
+  }),
+  route('GET', '/:id', async (ctx) => {
+    ctx.res.end(ctx.params.id)
+  }),
 ]
 
-;(async function run() {
+const resolve = router(routes)
+
+const server = createServer((req, res) => {
+  const url = req.url!
+  const method = req.method
+  const context = { req, res, url, method }
   try {
-    const context = {pathname: '/', method: 'GET', /* ...and other context for handler */}
-    const result = await resolve(routes, context)
-    console.log(result) // '1'
-  } catch(err) {
-    if (err.status === 404) {
-      // Route not found
+    resolve(context)
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      res.end('404 Not Found')
     }
+    res.end('500 Internet Server Error')
   }
-})()
+})
+
+server.listen(3000)
 ```
 
 ## API
