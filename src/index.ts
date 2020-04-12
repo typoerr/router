@@ -1,2 +1,2 @@
 export * from './router'
-export * from './not-found'
+export { NotFoundError } from './not-found'

@@ -1,8 +1,10 @@
 import regexparam from 'regexparam'
 import { Assign, PartialMap } from './utils'
-import * as chain from './callback-chain'
 import * as parser from './parser'
+import { compose } from './callback-chain'
 import { NotFoundError } from './not-found'
+
+export interface MatchHint extends parser.MatchHint {}
 
 export interface MatchContext {
   params: PartialMap<string>
@@ -15,97 +17,47 @@ export interface LookUpHint {
   method?: string
 }
 
-export type HandlerContext<T extends object> = Assign<Assign<T, LookUpHint>, MatchContext>
-
-export interface RouteHandler<T extends object, U> {
-  (ctx: HandlerContext<T>): U
-}
-
-export interface MiddlewareRoute<T extends object, U> {
-  path: parser.MatchHint
-  method: '*'
-  use: Middleware<T, U>[]
-}
-
-export interface HandlerRoute<T extends object, U> {
-  path: parser.MatchHint
-  method?: string
-  handler: RouteHandler<T, U>
-}
-
-export type Route<T extends object, U> = MiddlewareRoute<T, U> | HandlerRoute<T, U>
-
 export type ResolveContext<T extends object> = Assign<T, LookUpHint>
 
-export interface Next<T extends object, U> extends chain.Next<ResolveContext<T>, U> {}
+export type CallbackContext<T extends object> = Assign<Assign<T, LookUpHint>, MatchContext>
 
-export interface Middleware<T extends object, U> extends chain.Callback<ResolveContext<T>, U> {}
+export interface Next<T extends object, U> {
+  (context: ResolveContext<T>): Promise<U>
+}
 
-/**
- * Resolve routes
- */
-export function resolve<T extends object, U>(routes: Route<T, U>[], ctx: ResolveContext<T>) {
-  const mws: Middleware<T, U>[] = []
-  const final = () => Promise.reject(new NotFoundError(ctx.pathname, ctx.method))
+export interface Callback<T extends object, U> {
+  (context: CallbackContext<T>, next: Next<T, U>): Promise<U>
+}
 
-  // Find matched middleware and handler
-  for (let i = 0; i < routes.length; i++) {
-    const route = routes[i]
-    // Test method matching
-    if (
-      route.method === '*' ||
-      (route.method || '').toLowerCase() === (ctx.method || '').toLowerCase()
-    ) {
-      // Test path matching
-      if (route.path.pattern.test(ctx.pathname)) {
-        if ('use' in route) {
-          // middleware-route
-          /* eslint-disable-next-line prefer-spread */
-          mws.push.apply(mws, route.use)
-        } else {
-          // handler-route
-          const next = (c: ResolveContext<T>) => {
-            const params = parser.params(ctx.pathname, route.path)
-            const query = parser.query(ctx.search)
-            return Promise.resolve(route.handler({ ...c, params, query }))
-          }
-          mws.push(next)
-          // Break loop when router handler exists
-          break
-        }
+export interface Route<T extends object, U> {
+  (context: ResolveContext<T>, next: Next<T, U>): Promise<U>
+}
+
+export function route<T extends object, U>(method: string, path: string, callback: Callback<T, U>): Route<T, U>
+export function route<T extends object, U>(path: string, callback: Callback<T, U>): Route<T, U>
+export function route<T extends object, U>(a: any, b: any, c?: any): Route<T, U> {
+  const [method, path, callback]: [string | undefined, string, Callback<T, U>] = c ? [a, b, c] : [undefined, a, b]
+  const hint = regexparam(path)
+
+  return function resolve(ctx: ResolveContext<T>, next: Next<T, U>) {
+    if (hint.pattern.test(ctx.pathname)) {
+      if (method === undefined || method.toLowerCase() === ctx.method?.toLowerCase()) {
+        const params = parser.params(ctx.pathname, hint)
+        const query = parser.query(ctx.search)
+        return callback({ ...ctx, params, query }, next)
       }
     }
+    return next(ctx)
   }
-  return new Promise<U>((resolve) => resolve(chain.call(mws, ctx, final)))
 }
 
-/**
- * Create a HandlerRoute
- *
- * route('MEHTOD', '/path', handler): HandlerRoute
- * route('/path', handler): HandlerRoute
- */
-export function route<T extends object, U>(
-  method: string,
-  path: string,
-  handler: RouteHandler<T, U>,
-): HandlerRoute<T, U>
-export function route<T extends object, U>(
-  path: string,
-  handler: RouteHandler<T, U>,
-): HandlerRoute<T, U>
-export function route<T extends object, U>(a: any, b: any, c?: any): HandlerRoute<T, U> {
-  const [method, path, handler] = c ? [a, b, c] : [c, a, b]
-  return { path: regexparam(path), method, handler }
-}
+export function router<T extends object, U>(routes: Route<T, U>[]) {
+  const composed = compose(routes)
 
-/**
- *
- * Create a MiddlewareRoute
- */
-export function use<T extends object, U>(
-  path: string,
-  middlewares: Middleware<T, U>[],
-): MiddlewareRoute<T, U> {
-  return { path: regexparam(path), method: '*', use: middlewares }
+  return (ctx: Assign<T, { url: string; method?: string }>, next?: Next<T, U>) => {
+    const { pathname = '/', search } = parser.url(ctx.url)
+    const _ctx = { ...ctx, pathname, search } as ResolveContext<T>
+    const _next = next || (() => Promise.reject(new NotFoundError(pathname, ctx.method)))
+    return composed(_ctx, _next)
+  }
 }
