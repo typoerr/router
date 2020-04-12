@@ -1,9 +1,9 @@
 export interface Next<T, U> {
-  (ctx: T): Promise<U>
+  (ctx: T): Promise<U> | U
 }
 
 export interface Callback<T, U> {
-  (ctx: T, next: Next<T, U>): Promise<U>
+  (ctx: T, next: Next<T, U>): Promise<U> | U
 }
 
 export function compose<T, U>(callbacks: Callback<T, U>[]) {
