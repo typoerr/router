@@ -1,7 +1,7 @@
 import regexparam from 'regexparam'
 import { Assign, PartialMap } from './utils'
 import * as parser from './parser'
-import { compose } from './callback-chain'
+import { execute } from './callback-chain'
 import { NotFoundError } from './not-found'
 
 export interface MatchHint extends parser.MatchHint {}
@@ -51,13 +51,13 @@ export function route<T extends object, U = any>(a: any, b: any, c?: any): Route
   }
 }
 
-export function router<T extends object = {}, U = any>(routes: Route<T, U>[]) {
-  const composed = compose(routes)
-
-  return (ctx: Assign<T, { url: string; method?: string }>, next?: Next<T, U>) => {
-    const { pathname = '/', search } = parser.url(ctx.url)
-    const _ctx = { ...ctx, pathname, search } as ResolveContext<T>
-    const _next = next || (() => Promise.reject(new NotFoundError(pathname, ctx.method)))
-    return composed(_ctx, _next)
-  }
+export function router<T extends object = {}, U = any>(
+  routes: Route<T, U>[],
+  ctx: Assign<T, { url: string; method?: string }>,
+  next?: Next<T, U>,
+) {
+  const { pathname = '/', search } = parser.url(ctx.url)
+  const _ctx = { ...ctx, pathname, search } as ResolveContext<T>
+  const _next = next || (() => Promise.reject(new NotFoundError(pathname, ctx.method)))
+  return execute(routes, _ctx, _next)
 }

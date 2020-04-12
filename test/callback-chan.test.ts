@@ -1,9 +1,8 @@
-import { compose } from '../src/callback-chain'
+import { execute, Callback } from '../src/callback-chain'
 
 test('compose', async () => {
   expect.assertions(3)
-
-  const middleware = compose<string, string>([
+  const callbacks: Callback<string, string>[] = [
     async (ctx, next) => {
       expect(typeof ctx).toBe('string')
       return 'a' + (await next(ctx))
@@ -12,7 +11,8 @@ test('compose', async () => {
       expect(typeof ctx).toBe('string')
       return 'b' + (await next(ctx))
     },
-  ])
-  const result = await middleware('c', async (s) => s + '!')
+  ]
+
+  const result = await execute(callbacks, 'c', (s) => s + '!')
   expect(result).toBe('abc!')
 })

@@ -6,15 +6,14 @@ test('route(path, callback)', async () => {
     route('/', async (ctx) => ctx.pathname), //
     route('/path', async (ctx) => ctx.pathname),
   ]
-  const resolve = router(routes)
   const next = async () => '/notfound'
 
   // match
-  expect(resolve({ url: '/' }, next)).resolves.toBe('/')
-  expect(resolve({ url: '/path' }, next)).resolves.toBe('/path')
+  expect(router(routes, { url: '/' }, next)).resolves.toBe('/')
+  expect(router(routes, { url: '/path' }, next)).resolves.toBe('/path')
   // unmatch
-  expect(resolve({ url: '/notfound' }, next)).resolves.toBe('/notfound')
-  expect(resolve({ url: '/notfound' })).rejects.toBeInstanceOf(NotFoundError)
+  expect(router(routes, { url: '/notfound' }, next)).resolves.toBe('/notfound')
+  expect(router(routes, { url: '/notfound' })).rejects.toBeInstanceOf(NotFoundError)
 })
 
 test('route(method, path, callback)', async () => {
@@ -22,15 +21,14 @@ test('route(method, path, callback)', async () => {
     route('GET', '/', async (ctx) => ctx.pathname), //
     route('GET', '/path', async (ctx) => ctx.pathname),
   ]
-  const resolve = router(routes)
   const next = async () => '/notfound'
 
   // match
-  expect(resolve({ url: '/', method: 'GET' }, next)).resolves.toBe('/')
-  expect(resolve({ url: '/path', method: 'GET' }, next)).resolves.toBe('/path')
+  expect(router(routes, { url: '/', method: 'GET' }, next)).resolves.toBe('/')
+  expect(router(routes, { url: '/path', method: 'GET' }, next)).resolves.toBe('/path')
   // unmatch
-  expect(resolve({ url: '/', method: 'POST' }, next)).resolves.toBe('/notfound')
-  expect(resolve({ url: '/path', method: 'POST' })).rejects.toBeInstanceOf(NotFoundError)
+  expect(router(routes, { url: '/', method: 'POST' }, next)).resolves.toBe('/notfound')
+  expect(router(routes, { url: '/path', method: 'POST' })).rejects.toBeInstanceOf(NotFoundError)
 })
 
 test('context', async () => {
@@ -49,15 +47,13 @@ test('context', async () => {
       expect(ctx.search).toBe('?k=v')
     }),
   ]
-  const resolve = router(routes)
-  return resolve({ url: '/1?k=v', method: 'GET', n: 1 })
+  return router(routes, { url: '/1?k=v', method: 'GET', n: 1 })
 })
 
 test('next', async () => {
   const callback = route('/', (ctx, next) => next(ctx))
   const next = async () => 'next'
-  const resolve = router([callback])
-  expect(resolve({ url: '/' }, next)).resolves.toBe('next')
+  expect(router([callback], { url: '/' }, next)).resolves.toBe('next')
 })
 
 test('throw error', () => {
@@ -70,7 +66,6 @@ test('throw error', () => {
     route('/', () => '/'),
   ]
 
-  const resolve = router(routes)
-  expect(resolve({ url: '/reject' })).rejects.toBe('reject!')
-  expect(resolve({ url: '/error' })).rejects.toBeInstanceOf(Error)
+  expect(router(routes, { url: '/reject' })).rejects.toBe('reject!')
+  expect(router(routes, { url: '/error' })).rejects.toBeInstanceOf(Error)
 })
