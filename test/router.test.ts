@@ -1,4 +1,4 @@
-import { router, route } from '../src/router'
+import { router, route, Route } from '../src/router'
 import { NotFoundError } from '../src/not-found'
 
 test('route(path, callback)', async () => {
@@ -58,4 +58,19 @@ test('next', async () => {
   const next = async () => 'next'
   const resolve = router([callback])
   expect(resolve({ url: '/' }, next)).resolves.toBe('next')
+})
+
+test('throw error', () => {
+  function thrown(error: Error): never {
+    throw error
+  }
+  const routes: Route[] = [
+    route('/reject', () => Promise.reject('reject!')),
+    route('/error', () => thrown(new Error('error!'))),
+    route('/', () => '/'),
+  ]
+
+  const resolve = router(routes)
+  expect(resolve({ url: '/reject' })).rejects.toBe('reject!')
+  expect(resolve({ url: '/error' })).rejects.toBeInstanceOf(Error)
 })
