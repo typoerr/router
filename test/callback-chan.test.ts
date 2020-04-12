@@ -1,6 +1,6 @@
 import { compose } from '../src/callback-chain'
 
-test('chain.call', async () => {
+test('compose', async () => {
   expect.assertions(3)
 
   const middleware = compose<string, string>([
