@@ -37,6 +37,7 @@ export function query(search = ''): PartialMap<string> {
 //   ---------------             --------    -------     ----------    ---------------   ----------------- -----
 // /^([a-z0-9.+-]+:)?(?:\/\/)?(?:([^/:]*)(?::([^/]*))?@)?([^:?#/]*)(?::(\d*(?=$|[?#/])))?([^?#]*)(\?[^#]*)?(#.*)?/i
 const URI_REGEXP = /^([a-z0-9.+-]+:)?(?:\/\/)?(?:([^/:]*)(?::([^/]*))?@)?([^:?#/]*)(?::(\d*(?=$|[?#/])))?([^?#]*)(\?[^#]*)?(#.*)?/i
+
 const parts = ['protocol', 'username', 'password', 'hostname', 'port', 'pathname', 'search', 'hash']
 
 export interface ParsedURL {
@@ -49,11 +50,17 @@ export interface ParsedURL {
   search?: string
   hash?: string
 }
+
+export interface URLParserOption {
+  decode?: (path: string) => string
+}
+
 /**
  * Parse URL
  */
-export function url(path: string): ParsedURL {
-  const matched = URI_REGEXP.exec(decodeURI(path))
+export function url(path: string, option?: URLParserOption): ParsedURL {
+  const decode = option?.decode || decodeURIComponent
+  const matched = URI_REGEXP.exec(decode(path))
   if (!matched) {
     throw Error('URI not a standard WHATWG URI.')
   }

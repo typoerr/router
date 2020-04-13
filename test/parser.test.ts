@@ -61,4 +61,16 @@ test('url', () => {
     search: '?query=string',
     hash: undefined,
   })
+
+  const p5 = encodeURIComponent('https://user:pass@sub.example.com:8080/p/a/t/h?query=string#hash')
+  expect(parser.url(p5)).toStrictEqual({
+    protocol: 'https:',
+    username: 'user',
+    password: 'pass',
+    hostname: 'sub.example.com',
+    port: '8080',
+    pathname: '/p/a/t/h',
+    search: '?query=string',
+    hash: '#hash',
+  })
 })
