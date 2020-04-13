@@ -31,33 +31,32 @@ describe('Router', () => {
     const routes = [route('/a', callback), route('/b', callback), route('/c', callback)]
 
     for await (const path of ['/a', '/b', '/c']) {
-      const url = () => path
-      const router = new Router(routes, { url })
+      const router = new Router(routes, () => ({ url: path }))
       const result = await router.resolve({})
       expect(result).toBe(path)
     }
   })
 
   test('not found', () => {
-    const router = new Router([], { url: () => '' })
+    const router = new Router([], () => ({ url: '' }))
     expect(router.resolve({})).rejects.toBeInstanceOf(NotFoundError)
   })
 
   test('custom next', async () => {
     const next = () => '/notfound'
-    const router = new Router([], { url: () => '' })
+    const router = new Router([], () => ({ url: '' }))
     expect(router.resolve({}, next)).resolves.toBe('/notfound')
   })
 
   test('custom next - reject', async () => {
     const next = () => Promise.reject('/notfound')
-    const router = new Router([], { url: () => '' })
+    const router = new Router([], () => ({ url: '' }))
     expect(router.resolve({}, next)).rejects.toBe('/notfound')
   })
 
   test('custom next - error', async () => {
     const next = () => thrown(new Error('404'))
-    const router = new Router([], { url: () => '' })
+    const router = new Router([], () => ({ url: '' }))
     expect(router.resolve({}, next)).rejects.toBeInstanceOf(Error)
   })
 
@@ -78,7 +77,19 @@ describe('Router', () => {
       }),
     ]
 
-    const router = new Router(routes, { url: () => '/1?k=v', method: () => 'GET' })
+    const router = new Router(routes, () => ({ url: '/1?k=v', method: 'GET' }))
     return router.resolve({ n: 1 })
+  })
+
+  test('option parser', async () => {
+    const match = route<{ ctx: number }>('/', () => '/')
+    const option = jest.fn(() => ({ url: '/' }))
+    const router = new Router([match], option)
+
+    await router.resolve({ ctx: 1 })
+    expect(option).toBeCalledWith({ ctx: 1 })
+
+    await router.resolve({ ctx: 2 })
+    expect(option).toBeCalledWith({ ctx: 2 })
   })
 })

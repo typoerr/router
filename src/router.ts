@@ -51,29 +51,29 @@ export function route<T extends object, U = any>(a: any, b: any, c?: any): Route
   }
 }
 
-export interface RouterHintParser<T extends object = {}> {
-  url: (ctx: T) => string
-  method?: (ctx: T) => string | undefined
+export interface RouterOption extends parser.URLParserOption {
+  url: string
+  method?: string
 }
 
-export interface RouterOption<T extends object = {}> extends parser.URLParserOption, RouterHintParser<T> {}
+export interface RouterOptionParser<T extends object = {}> {
+  (ctx: T): RouterOption
+}
 
 export class Router<T extends object = {}, U = any> {
   private routes: Route<T, U>[]
-  private option: RouterOption<T>
+  private option: RouterOptionParser<T>
 
-  constructor(routes: Route<T, U>[], option: RouterOption<T>) {
+  constructor(routes: Route<T, U>[], option: RouterOptionParser<T>) {
     this.routes = routes
     this.option = option
   }
 
   resolve = (context: T, next?: Next<T, U>) => {
-    const { routes, option } = this
-    const url = option.url(context)
-    const method = option.method?.call(option, context)
-    const { pathname = '/', search } = parser.url(url, option)
-    const ctx = { ...context, pathname, method, search }
-    const done = next || (() => Promise.reject(new NotFoundError(pathname, method)))
-    return execute(routes, ctx, done)
+    const option = this.option(context)
+    const { pathname = '/', search } = parser.url(option.url, option)
+    const ctx = { ...context, pathname, method: option.method, search }
+    const done = next || (() => Promise.reject(new NotFoundError(pathname, option.method)))
+    return execute(this.routes, ctx, done)
   }
 }
