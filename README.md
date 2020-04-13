@@ -26,6 +26,10 @@ interface Context {
 }
 
 const routes: Route<Context>[] = [
+  // noop middleware
+  router('/*', (ctx, next) => {
+    return next(ctx)
+  }),
   route('GET', '/', (ctx) => {
     return ctx.res.end(ctx.pathname)
   }),
@@ -36,10 +40,10 @@ const routes: Route<Context>[] = [
   }),
 ]
 
-const router = new Router(routes, {
-  url: (ctx) => ctx.req.url || '/',
-  method: (ctx) => ctx.req.method,
-})
+const router = new Router(routes, (ctx) => ({
+  url: ctx.req.url || '/',
+  method: ctx.req.method,
+}))
 
 const server = http.createServer(async (req, res) => {
   try {
@@ -68,6 +72,10 @@ interface Context {
 }
 
 const routes: Route<Context>[] = [
+    // noop middleware
+  router('/*', (ctx, next) => {
+    return next(ctx)
+  }),
   route('GET', '/', (ctx) => {
     return ctx.res.send(ctx.req.url)
   }),
@@ -81,10 +89,10 @@ const routes: Route<Context>[] = [
 
 const server = express()
 
-const router = new Router(routes, {
-  url: (ctx) => ctx.req.url,
-  method: (ctx) => ctx.req.method,
-})
+const router = new Router(routes, (ctx) => ({
+  url: ctx.req.url,
+  method: ctx.req.method,
+}))
 
 server.use(async (req, res, next) => {
   try {
