@@ -18,29 +18,32 @@ See [lukeed/regexparam](https://github.com/lukeed/regexparam)
 
 ```ts
 import http from 'http'
-import { route, Route, router } from '@typoerr/router'
+import { route, Route, Router } from '@typoerr/router'
 
 interface Context {
   req: http.IncomingMessage
   res: http.ServerResponse
 }
 
-const routes: Route<Context, any>[] = [
-  route('GET', '/', async (ctx) => {
+const routes: Route<Context>[] = [
+  route('GET', '/', (ctx) => {
     return ctx.res.end(ctx.pathname)
   }),
-  route('/*', async (ctx) => {
+  route('/*', (ctx) => {
     ctx.res.statusCode = 302
     ctx.res.setHeader('Location', '/')
     return ctx.res.end()
   }),
 ]
 
+const router = new Router(routes, {
+  url: (ctx) => ctx.req.url || '/',
+  method: (ctx) => ctx.req.method,
+})
+
 const server = http.createServer(async (req, res) => {
-  const url = req.url || '/'
-  const method = req.method
   try {
-    await router(routes, { req, res, url, method })
+    await router.resolve({ req, res })
   } catch (err) {
     if (err.status === 404) {
       return res.end('404 Not Found')
@@ -57,7 +60,7 @@ server.listen(3000)
 
 ```ts
 import express from 'express'
-import { route, Route, router } from '@typoerr/router'
+import { route, Route, Router } from '@typoerr/router'
 
 interface Context {
   req: express.Request
@@ -65,24 +68,27 @@ interface Context {
 }
 
 const routes: Route<Context>[] = [
-  route('GET', '/', async (ctx) => {
+  route('GET', '/', (ctx) => {
     return ctx.res.send(ctx.req.url)
   }),
-  route('GET', '/reject', async () => {
+  route('GET', '/reject', () => {
     return Promise.reject(new Error('reject'))
   }),
-  route('GET', '/error', async () => {
+  route('GET', '/error', () => {
     throw new Error('error')
   }),
 ]
 
 const server = express()
 
+const router = new Router(routes, {
+  url: (ctx) => ctx.req.url,
+  method: (ctx) => ctx.req.method,
+})
+
 server.use(async (req, res, next) => {
-  const url = req.url || '/'
-  const method = req.method
   try {
-    await router(routes, { req, res, url, method })
+    await router.resolve({ req, res })
   } catch (err) {
     console.error(err)
     next(err)
