@@ -1,6 +1,6 @@
 import { execute, Callback } from '../src/callback-chain'
 
-test('compose', async () => {
+test('execute', async () => {
   expect.assertions(3)
   const callbacks: Callback<string, string>[] = [
     async (ctx, next) => {
