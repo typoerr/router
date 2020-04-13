@@ -1,4 +1,4 @@
-import { route, CallbackContext, createRouter } from '../src/router'
+import { route, CallbackContext, Router } from '../src/router'
 import { NotFoundError } from '../src/not-found'
 
 function thrown<T extends Error>(err: T) {
@@ -24,7 +24,7 @@ describe('route', () => {
   })
 })
 
-describe('createRouter', () => {
+describe('Router', () => {
   test('path match', async () => {
     expect.assertions(3)
     const callback = (ctx: CallbackContext) => ctx.pathname
@@ -32,33 +32,33 @@ describe('createRouter', () => {
 
     for await (const path of ['/a', '/b', '/c']) {
       const url = () => path
-      const router = createRouter(routes, { url })
-      const result = await router({})
+      const router = new Router(routes, { url })
+      const result = await router.resolve({})
       expect(result).toBe(path)
     }
   })
 
   test('not found', () => {
-    const router = createRouter([], { url: () => '' })
-    expect(router({})).rejects.toBeInstanceOf(NotFoundError)
+    const router = new Router([], { url: () => '' })
+    expect(router.resolve({})).rejects.toBeInstanceOf(NotFoundError)
   })
 
   test('custom next', async () => {
     const next = () => '/notfound'
-    const router = createRouter([], { url: () => '' })
-    expect(router({}, next)).resolves.toBe('/notfound')
+    const router = new Router([], { url: () => '' })
+    expect(router.resolve({}, next)).resolves.toBe('/notfound')
   })
 
   test('custom next - reject', async () => {
     const next = () => Promise.reject('/notfound')
-    const router = createRouter([], { url: () => '' })
-    expect(router({}, next)).rejects.toBe('/notfound')
+    const router = new Router([], { url: () => '' })
+    expect(router.resolve({}, next)).rejects.toBe('/notfound')
   })
 
   test('custom next - error', async () => {
     const next = () => thrown(new Error('404'))
-    const router = createRouter([], { url: () => '' })
-    expect(router({}, next)).rejects.toBeInstanceOf(Error)
+    const router = new Router([], { url: () => '' })
+    expect(router.resolve({}, next)).rejects.toBeInstanceOf(Error)
   })
 
   test('callback context', () => {
@@ -78,7 +78,7 @@ describe('createRouter', () => {
       }),
     ]
 
-    const router = createRouter(routes, { url: () => '/1?k=v', method: () => 'GET' })
-    return router({ n: 1 })
+    const router = new Router(routes, { url: () => '/1?k=v', method: () => 'GET' })
+    return router.resolve({ n: 1 })
   })
 })

@@ -58,8 +58,17 @@ export interface RouterHintParser<T extends object = {}> {
 
 export interface RouterOption<T extends object = {}> extends parser.URLParserOption, RouterHintParser<T> {}
 
-export function createRouter<T extends object = {}, U = any>(routes: Route<T, U>[], option: RouterOption<T>) {
-  return function router(context: T, next?: Next<T, U>) {
+export class Router<T extends object = {}, U = any> {
+  private routes: Route<T, U>[]
+  private option: RouterOption<T>
+
+  constructor(routes: Route<T, U>[], option: RouterOption<T>) {
+    this.routes = routes
+    this.option = option
+  }
+
+  resolve = (context: T, next?: Next<T, U>) => {
+    const { routes, option } = this
     const url = option.url(context)
     const method = option.method?.call(option, context)
     const { pathname = '/', search } = parser.url(url, option)
