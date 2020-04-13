@@ -30,7 +30,7 @@ export interface Callback<T extends object = {}, U = any> {
 }
 
 export interface Route<T extends object = {}, U = any> {
-  (context: ResolveContext<T>, next: Next<T, U>): Promise<U> | U
+  (context: ResolveContext<T>, next: Next<T, U>): Promise<U>
 }
 
 export function route<T extends object, U = any>(method: string, path: string, callback: Callback<T, U>): Route<T, U>
@@ -39,7 +39,7 @@ export function route<T extends object, U = any>(a: any, b: any, c?: any): Route
   const [method, path, callback]: [string | undefined, string, Callback<T, U>] = c ? [a, b, c] : [undefined, a, b]
   const hint = regexparam(path)
 
-  return function resolve(ctx: ResolveContext<T>, next: Next<T, U>) {
+  return async function resolve(ctx: ResolveContext<T>, next: Next<T, U>) {
     if (hint.pattern.test(ctx.pathname)) {
       if (method === undefined || method.toLowerCase() === ctx.method?.toLowerCase()) {
         const params = parser.params(ctx.pathname, hint)
@@ -51,13 +51,20 @@ export function route<T extends object, U = any>(a: any, b: any, c?: any): Route
   }
 }
 
-export function router<T extends object = {}, U = any>(
-  routes: Route<T, U>[],
-  ctx: Assign<T, { url: string; method?: string }>,
-  next?: Next<T, U>,
-) {
-  const { pathname = '/', search } = parser.url(ctx.url)
-  const _ctx = { ...ctx, pathname, search } as ResolveContext<T>
-  const _next = next || (() => Promise.reject(new NotFoundError(pathname, ctx.method)))
-  return execute(routes, _ctx, _next)
+export interface RouterHintParser<T extends object = {}> {
+  url: (ctx: T) => string
+  method?: (ctx: T) => string | undefined
+}
+
+export interface RouterOption<T extends object = {}> extends parser.URLParserOption, RouterHintParser<T> {}
+
+export function createRouter<T extends object = {}, U = any>(routes: Route<T, U>[], option: RouterOption<T>) {
+  return function router(context: T, next?: Next<T, U>) {
+    const url = option.url(context)
+    const method = option.method?.call(option, context)
+    const { pathname = '/', search } = parser.url(url, option)
+    const ctx = { ...context, pathname, method, search }
+    const done = next || (() => Promise.reject(new NotFoundError(pathname, method)))
+    return execute(routes, ctx, done)
+  }
 }
