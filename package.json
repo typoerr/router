@@ -1,7 +1,7 @@
 {
   "name": "@typoerr/router",
   "description": "Universal router",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "author": "typoerr",
   "license": "MIT",
   "main": "dist/index.js",
