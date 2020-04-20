@@ -47,9 +47,11 @@
     "compile": "rollup -c",
     "clean": "run-p clean:**",
     "clean:dist": "rimraf dist",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src/**/*.ts test/**/*.ts",
     "npm-publish": "yarn publish",
-    "release": "run-s test compile npm-publish clean",
+    "git:push": "git push -u origin master",
+    "git:tag": "git push --tag",
+    "release": "run-s lint test compile npm-publish clean git:**",
     "test": "jest"
   },
   "publishConfig": {
