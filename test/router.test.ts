@@ -1,95 +1,81 @@
+import test from 'ava'
+import sinon from 'sinon'
 import { route, CallbackContext, Router } from '../src/router'
 import { NotFoundError } from '../src/not-found'
 
-function thrown<T extends Error>(err: T) {
+function throws<T extends Error>(err: T) {
   throw err
 }
 
-describe('route', () => {
-  test('route(path, callback)', () => {
-    const match = route('/', (ctx) => ctx.pathname)
-    const next = () => '/notfound'
+test('path match', async (t) => {
+  t.plan(3)
+  const callback = (ctx: CallbackContext) => ctx.pathname
+  const routes = [route('/a', callback), route('/b', callback), route('/c', callback)]
 
-    expect(match({ pathname: '/' }, next)).resolves.toBe('/')
-    expect(match({ pathname: '/path' }, next)).resolves.toBe('/notfound')
-  })
-
-  test('route(method, path, callback)', () => {
-    const match = route('GET', '/', (ctx) => ctx.pathname)
-    const next = () => '/notfound'
-
-    expect(match({ pathname: '/', method: 'GET' }, next)).resolves.toBe('/')
-    expect(match({ pathname: '/', method: 'POST' }, next)).resolves.toBe('/notfound')
-    expect(match({ pathname: '/path', method: 'GET' }, next)).resolves.toBe('/notfound')
-  })
+  for await (const path of ['/a', '/b', '/c']) {
+    const router = new Router(routes, () => ({ url: path }))
+    const result = await router.resolve({})
+    t.is(result, path)
+  }
 })
 
-describe('Router', () => {
-  test('path match', async () => {
-    expect.assertions(3)
-    const callback = (ctx: CallbackContext) => ctx.pathname
-    const routes = [route('/a', callback), route('/b', callback), route('/c', callback)]
+test('not found', async (t) => {
+  const router = new Router([], () => ({ url: '' }))
+  const result = await t.throwsAsync(router.resolve({}))
+  t.assert(result instanceof NotFoundError)
+})
 
-    for await (const path of ['/a', '/b', '/c']) {
-      const router = new Router(routes, () => ({ url: path }))
-      const result = await router.resolve({})
-      expect(result).toBe(path)
-    }
-  })
+test('custom next', async (t) => {
+  const next = () => '/notfound'
+  const router = new Router([], () => ({ url: '' }))
+  const result = await router.resolve({}, next)
+  t.is(result, '/notfound')
+})
 
-  test('not found', () => {
-    const router = new Router([], () => ({ url: '' }))
-    expect(router.resolve({})).rejects.toBeInstanceOf(NotFoundError)
-  })
+test('custom next - reject', async (t) => {
+  const next = () => Promise.reject('/notfound')
+  const router = new Router([], () => ({ url: '' }))
+  return router
+    .resolve({}, next)
+    .then(() => t.fail())
+    .catch((err) => t.is(err, '/notfound'))
+})
 
-  test('custom next', async () => {
-    const next = () => '/notfound'
-    const router = new Router([], () => ({ url: '' }))
-    expect(router.resolve({}, next)).resolves.toBe('/notfound')
-  })
+test('custom next - error', async (t) => {
+  const next = () => throws(new Error('404'))
+  const router = new Router([], () => ({ url: '' }))
+  const err = await t.throwsAsync(router.resolve({}, next))
+  t.is(err.message, '404')
+})
 
-  test('custom next - reject', async () => {
-    const next = () => Promise.reject('/notfound')
-    const router = new Router([], () => ({ url: '' }))
-    expect(router.resolve({}, next)).rejects.toBe('/notfound')
-  })
+test('callback context', (t) => {
+  t.plan(6)
 
-  test('custom next - error', async () => {
-    const next = () => thrown(new Error('404'))
-    const router = new Router([], () => ({ url: '' }))
-    expect(router.resolve({}, next)).rejects.toBeInstanceOf(Error)
-  })
+  const routes = [
+    route<{ n: number }, void>('/:id', (ctx) => {
+      // context
+      t.is(ctx.n, 1)
+      // match context
+      t.is(ctx.params.id, '1')
+      t.deepEqual(ctx.query, { k: 'v' })
+      // lookup hint
+      t.is(ctx.pathname, '/1')
+      t.is(ctx.method, 'GET')
+      t.is(ctx.search, '?k=v')
+    }),
+  ]
 
-  test('callback context', () => {
-    expect.assertions(6)
+  const router = new Router(routes, () => ({ url: '/1?k=v', method: 'GET' }))
+  return router.resolve({ n: 1 })
+})
 
-    const routes = [
-      route<{ n: number }, void>('/:id', (ctx) => {
-        // context
-        expect(ctx.n).toBe(1)
-        // match context
-        expect(ctx.params.id).toBe('1')
-        expect(ctx.query).toStrictEqual({ k: 'v' })
-        // lookup hint
-        expect(ctx.pathname).toBe('/1')
-        expect(ctx.method).toBe('GET')
-        expect(ctx.search).toBe('?k=v')
-      }),
-    ]
+test('option parser', async (t) => {
+  const match = route<{ ctx: number }>('/', () => '/')
+  const option = sinon.fake(() => ({ url: '/' }))
+  const router = new Router([match], option)
 
-    const router = new Router(routes, () => ({ url: '/1?k=v', method: 'GET' }))
-    return router.resolve({ n: 1 })
-  })
+  await router.resolve({ ctx: 1 })
 
-  test('option parser', async () => {
-    const match = route<{ ctx: number }>('/', () => '/')
-    const option = jest.fn(() => ({ url: '/' }))
-    const router = new Router([match], option)
-
-    await router.resolve({ ctx: 1 })
-    expect(option).toBeCalledWith({ ctx: 1 })
-
-    await router.resolve({ ctx: 2 })
-    expect(option).toBeCalledWith({ ctx: 2 })
-  })
+  await router.resolve({ ctx: 2 })
+  t.assert(option.calledWith({ ctx: 2 }))
 })
