@@ -3,7 +3,6 @@ export default {
   files: ['test/**/*.test.{js,jsx,ts,tsx}'],
   extensions: ['ts'],
   cache: true,
-  concurrency: 5,
   failFast: true,
   failWithoutAssertions: true,
   verbose: true,
