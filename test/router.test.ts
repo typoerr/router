@@ -1,6 +1,7 @@
 import test from 'ava'
 import sinon from 'sinon'
-import { route, CallbackContext, Router } from '../src/router'
+import { HandlerContext, route } from '../src/route'
+import { Router } from '../src/router'
 import { NotFoundError } from '../src/not-found'
 
 function throws<T extends Error>(err: T) {
@@ -9,7 +10,7 @@ function throws<T extends Error>(err: T) {
 
 test('path match', async (t) => {
   t.plan(3)
-  const callback = (ctx: CallbackContext) => ctx.pathname
+  const callback = (ctx: HandlerContext) => ctx.pathname
   const routes = [route('/a', callback), route('/b', callback), route('/c', callback)]
 
   for await (const path of ['/a', '/b', '/c']) {

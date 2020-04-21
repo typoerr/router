@@ -1,5 +1,5 @@
 import test from 'ava'
-import { route } from '../src/router'
+import { route } from '../src/route'
 
 test('route(path, callback)', async (t) => {
   const match = route('/', (ctx) => ctx.pathname)
