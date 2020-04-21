@@ -1,21 +1,22 @@
+import test from 'ava'
 import * as parser from '../src/parser'
 import regexparams from 'regexparam'
 
-test('params', () => {
+test('params', (t) => {
   const hint = regexparams('/:a/:b')
   const params = parser.params('/a/b', hint)
-  expect(params).toStrictEqual({ a: 'a', b: 'b' })
+  t.deepEqual(params, { a: 'a', b: 'b' })
 })
 
-test('query', () => {
+test('query', (t) => {
   const search = 'a=a&b=b'
-  expect(parser.query(search)).toStrictEqual({ a: 'a', b: 'b' })
-  expect(parser.query(undefined)).toStrictEqual({})
+  t.deepEqual(parser.query(search), { a: 'a', b: 'b' })
+  t.deepEqual(parser.query(undefined), {})
 })
 
-test('url', () => {
+test('url', (t) => {
   const p1 = 'https://user:pass@sub.example.com:8080/p/a/t/h?query=string#hash'
-  expect(parser.url(p1)).toStrictEqual({
+  t.deepEqual(parser.url(p1), {
     protocol: 'https:',
     username: 'user',
     password: 'pass',
@@ -27,7 +28,7 @@ test('url', () => {
   })
 
   const p2 = '/p/a/t/h?query=string'
-  expect(parser.url(p2)).toStrictEqual({
+  t.deepEqual(parser.url(p2), {
     protocol: undefined,
     username: undefined,
     password: undefined,
@@ -39,7 +40,7 @@ test('url', () => {
   })
 
   const p3 = '/p/a/t/h/?query=string'
-  expect(parser.url(p3)).toStrictEqual({
+  t.deepEqual(parser.url(p3), {
     protocol: undefined,
     username: undefined,
     password: undefined,
@@ -51,7 +52,7 @@ test('url', () => {
   })
 
   const p4 = '/?query=string'
-  expect(parser.url(p4)).toStrictEqual({
+  t.deepEqual(parser.url(p4), {
     protocol: undefined,
     username: undefined,
     password: undefined,
@@ -63,7 +64,7 @@ test('url', () => {
   })
 
   const p5 = encodeURIComponent('https://user:pass@sub.example.com:8080/p/a/t/h?query=string#hash')
-  expect(parser.url(p5)).toStrictEqual({
+  t.deepEqual(parser.url(p5), {
     protocol: 'https:',
     username: 'user',
     password: 'pass',

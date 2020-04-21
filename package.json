@@ -27,18 +27,18 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^4.1.1",
-    "@types/jest": "^25.2.1",
     "@types/node": "^13.13.0",
     "@types/querystringify": "^2.0.0",
+    "@types/sinon": "^9.0.0",
     "@typoerr/eslint-config": "^0.0.29",
+    "ava": "^3.7.1",
     "eslint": "^6.8.0",
-    "jest": "^25.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.0.4",
     "rimraf": "^3.0.2",
     "rollup": "^2.6.1",
     "rollup-plugin-auto-external": "^2.0.0",
-    "ts-jest": "^25.4.0",
+    "sinon": "^9.0.2",
     "ts-node": "^8.8.2",
     "tsconfig-paths": "^3.9.0",
     "typescript": "^3.8.3"
@@ -52,18 +52,9 @@
     "git:push": "git push -u origin master",
     "git:tag": "git push --tag",
     "release": "run-s lint test compile npm-publish clean git:**",
-    "test": "jest"
+    "test": "ava --config ./ava.config.js"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "verbose": true,
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "test/tsconfig.json"
-      }
-    }
   }
 }
