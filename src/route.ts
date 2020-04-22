@@ -31,10 +31,10 @@ export interface Route<T extends object = {}, U = any> {
 
 type METHOD = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'TRACE'
 
-export function route<T extends object, U = any>(method: METHOD, path: string, callback: Handler<T, U>): Route<T, U>
-export function route<T extends object, U = any>(path: string, callback: Handler<T, U>): Route<T, U>
+export function route<T extends object, U = any>(method: METHOD, path: string, handler: Handler<T, U>): Route<T, U>
+export function route<T extends object, U = any>(path: string, handler: Handler<T, U>): Route<T, U>
 export function route<T extends object, U = any>(a: any, b: any, c?: any): Route<T, U> {
-  const [method, path, callback]: [string | undefined, string, Handler<T, U>] = c ? [a, b, c] : [undefined, a, b]
+  const [method, path, handler]: [string | undefined, string, Handler<T, U>] = c ? [a, b, c] : [undefined, a, b]
   const hint = regexparam(path)
 
   return async function resolve(ctx: ResolveContext<T>, next: Next<T, U>) {
@@ -42,7 +42,7 @@ export function route<T extends object, U = any>(a: any, b: any, c?: any): Route
       if (method === undefined || method.toLowerCase() === ctx.method?.toLowerCase()) {
         const params = parser.params(ctx.pathname, hint)
         const query = parser.query(ctx.search)
-        return callback({ ...ctx, params, query }, next)
+        return handler({ ...ctx, params, query }, next)
       }
     }
     return next(ctx)
