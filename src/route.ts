@@ -29,7 +29,9 @@ export interface Route<T extends object = {}, U = any> {
   (context: ResolveContext<T>, next: Next<T, U>): Promise<U>
 }
 
-export function route<T extends object, U = any>(method: string, path: string, callback: Handler<T, U>): Route<T, U>
+type METHOD = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'TRACE'
+
+export function route<T extends object, U = any>(method: METHOD, path: string, callback: Handler<T, U>): Route<T, U>
 export function route<T extends object, U = any>(path: string, callback: Handler<T, U>): Route<T, U>
 export function route<T extends object, U = any>(a: any, b: any, c?: any): Route<T, U> {
   const [method, path, callback]: [string | undefined, string, Handler<T, U>] = c ? [a, b, c] : [undefined, a, b]
