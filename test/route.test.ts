@@ -1,7 +1,8 @@
 import test from 'ava'
-import { route } from '../src/route'
+import { route, HandlerContext } from '../src/route'
+import { compose } from '../src/callback-chain'
 
-test('route(path, callback)', async (t) => {
+test('route(path, handler)', async (t) => {
   const match = route('/', (ctx) => ctx.pathname)
   const next = () => '/notfound'
 
@@ -9,11 +10,25 @@ test('route(path, callback)', async (t) => {
   t.is(await match({ pathname: '/path' }, next), '/notfound')
 })
 
-test('route(method, path, callback)', async (t) => {
+test('route(method, path, handler)', async (t) => {
   const match = route('GET', '/', (ctx) => ctx.pathname)
   const next = () => '/notfound'
 
   t.is(await match({ pathname: '/', method: 'GET' }, next), '/')
   t.is(await match({ pathname: '/', method: 'POST' }, next), '/notfound')
   t.is(await match({ pathname: '/path', method: 'GET' }, next), '/notfound')
+})
+
+test('route level middleware', async (t) => {
+  t.plan(1)
+  type Context = HandlerContext<{ message: string }>
+
+  const handler = compose<Context>([
+    (ctx, next) => next({ ...ctx, message: ctx.message + '!' }),
+    (ctx) => t.assert(ctx.message === 'hello!'),
+  ])
+
+  const next = () => '/notfound'
+  const match = route('/', handler)
+  return match({ pathname: '/', message: 'hello' }, next)
 })

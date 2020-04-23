@@ -1,7 +1,7 @@
 import * as parser from './parser'
-import { execute } from './callback-chain'
+import { compose, Composed } from './callback-chain'
 import { NotFoundError } from './not-found'
-import { Route, Next } from './route'
+import { Route, Next, ResolveContext } from './route'
 
 export interface RouterOption extends parser.URLParserOption {
   url: string
@@ -13,19 +13,19 @@ export interface RouterOptionParser<T extends object = {}> {
 }
 
 export class Router<T extends object = {}, U = any> {
-  private routes: Route<T, U>[]
-  private option: RouterOptionParser<T>
+  private _resolve: Composed<ResolveContext<T>, U>
+  private _option: RouterOptionParser<T>
 
   constructor(routes: Route<T, U>[], option: RouterOptionParser<T>) {
-    this.routes = routes
-    this.option = option
+    this._resolve = compose(routes)
+    this._option = option
   }
 
   resolve = (context: T, next?: Next<T, U>) => {
-    const option = this.option(context)
+    const option = this._option(context)
     const { pathname = '/', search } = parser.url(option.url, option)
     const ctx = { ...context, pathname, method: option.method, search }
     const done = next || (() => Promise.reject(new NotFoundError(pathname, option.method)))
-    return execute(this.routes, ctx, done)
+    return this._resolve(ctx, done)
   }
 }
