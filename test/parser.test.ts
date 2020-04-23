@@ -1,5 +1,5 @@
 import test from 'ava'
-import * as parser from '../src/parser'
+import * as parser from '@/parser'
 import regexparams from 'regexparam'
 
 test('params', (t) => {

@@ -1,5 +1,5 @@
 import test from 'ava'
-import { compose, Callback } from '../src/callback-chain'
+import { compose, Callback } from '@/callback-chain'
 
 test('compose', async (t) => {
   t.plan(3)

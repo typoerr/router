@@ -1,8 +1,8 @@
 import test from 'ava'
 import sinon from 'sinon'
-import { HandlerContext, route } from '../src/route'
-import { Router } from '../src/router'
-import { NotFoundError } from '../src/not-found'
+import { HandlerContext, route } from '@/route'
+import { Router } from '@/router'
+import { NotFoundError } from '@/not-found'
 
 function throws<T extends Error>(err: T) {
   throw err

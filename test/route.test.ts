@@ -1,6 +1,6 @@
 import test from 'ava'
-import { route, HandlerContext } from '../src/route'
-import { compose } from '../src/callback-chain'
+import { route, HandlerContext } from '@/route'
+import { compose } from '@/callback-chain'
 
 test('route(path, handler)', async (t) => {
   const match = route('/', (ctx) => ctx.pathname)
