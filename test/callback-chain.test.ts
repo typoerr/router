@@ -1,7 +1,7 @@
 import test from 'ava'
-import { execute, Callback } from '../src/callback-chain'
+import { compose, Callback } from '../src/callback-chain'
 
-test('execute', async (t) => {
+test('compose', async (t) => {
   t.plan(3)
   const callbacks: Callback<string, string>[] = [
     async (ctx, next) => {
@@ -14,6 +14,6 @@ test('execute', async (t) => {
     },
   ]
 
-  const result = await execute(callbacks, 'c', (s) => s + '!')
+  const result = await compose(callbacks)('c', (s) => s + '!')
   t.is(result, 'abc!')
 })
