@@ -14,68 +14,19 @@ See [lukeed/regexparam](https://github.com/lukeed/regexparam)
 
 ## Example
 
-### node-http
-
-```ts
-import http from 'http'
-import { route, Route, Router } from '@typoerr/router'
-
-interface Context {
-  req: http.IncomingMessage
-  res: http.ServerResponse
-}
-
-const routes: Route<Context>[] = [
-  // noop middleware
-  router('/*', (ctx, next) => {
-    return next(ctx)
-  }),
-  route('GET', '/', (ctx) => {
-    return ctx.res.end(ctx.pathname)
-  }),
-  route('/*', (ctx) => {
-    ctx.res.statusCode = 302
-    ctx.res.setHeader('Location', '/')
-    return ctx.res.end()
-  }),
-]
-
-const router = new Router(routes, (ctx) => ({
-  url: ctx.req.url || '/',
-  method: ctx.req.method,
-}))
-
-const server = http.createServer(async (req, res) => {
-  try {
-    await router.resolve({ req, res })
-  } catch (err) {
-    if (err.status === 404) {
-      return res.end('404 Not Found')
-    }
-    console.error(err)
-    return res.end('500 Internet Server Error')
-  }
-})
-
-server.listen(3000)
-```
-
 ### express
 
 ```ts
 import express from 'express'
-import { route, Route, Router } from '@typoerr/router'
+import * as url from 'url'
+import { route, compose, ResolveContext } from '@typoerr/router'
 
 interface Context {
   req: express.Request
   res: express.Response
 }
 
-const routes: Route<Context>[] = [
-    // noop middleware
-  router('/*', (ctx, next) => {
-    return next(ctx)
-  }),
+const router = compose<ResolveContext<Context>>([
   route('GET', '/', (ctx) => {
     return ctx.res.send(ctx.req.url)
   }),
@@ -85,18 +36,16 @@ const routes: Route<Context>[] = [
   route('GET', '/error', () => {
     throw new Error('error')
   }),
-]
+])
 
 const server = express()
 
-const router = new Router(routes, (ctx) => ({
-  url: ctx.req.url,
-  method: ctx.req.method,
-}))
-
 server.use(async (req, res, next) => {
+  const { pathname, search } = url.parse(req.url)
+  const context = { pathname: pathname || '/', search, method: req.method, req, res }
+  const notfound = () => Promise.reject(new Error('404 NotFound'))
   try {
-    await router.resolve({ req, res })
+    await router(context, notfound)
   } catch (err) {
     console.error(err)
     next(err)
