@@ -9,7 +9,9 @@ test('params', (t) => {
 })
 
 test('query', (t) => {
-  const search = 'a=a&b=b'
-  t.deepEqual(parser.query(search), { a: 'a', b: 'b' })
+  const a = 'a=a&b=b'
+  const b = '?a=a'
+  t.deepEqual(parser.query(a), { a: 'a', b: 'b' })
+  t.deepEqual(parser.query(b), { a: 'a' })
   t.deepEqual(parser.query(undefined), {})
 })

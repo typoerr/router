@@ -9,7 +9,7 @@ export interface MatchContext {
 
 export interface LookUpHint {
   pathname: string
-  search?: string
+  search?: string | null
   method?: string
 }
 
@@ -41,7 +41,7 @@ export function route<T extends object, U = any>(a: any, b: any, c?: any): Route
     if (hint.pattern.test(ctx.pathname)) {
       if (method === undefined || method.toLowerCase() === ctx.method?.toLowerCase()) {
         const params = parser.params(ctx.pathname, hint)
-        const query = parser.query(ctx.search)
+        const query = parser.query(ctx.search || undefined)
         return handler({ ...ctx, params, query }, next)
       }
     }

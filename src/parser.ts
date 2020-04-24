@@ -26,6 +26,6 @@ export function params(path: string, hint: MatchHint): PartialMap<string> {
 /**
  * Parse query strings
  */
-export function query(search = ''): PartialMap<string> {
+export function query(search?: string): PartialMap<string> {
   return search ? qs.parse(search) : {}
 }
