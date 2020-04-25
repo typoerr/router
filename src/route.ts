@@ -40,10 +40,9 @@ export function route<T extends object, U = any>(a: any, b: any, c?: any): Route
   return async function resolve(ctx: ResolveContext<T>, next: Next<T, U>) {
     if (hint.pattern.test(ctx.pathname)) {
       if (method === undefined || method.toLowerCase() === ctx.method?.toLowerCase()) {
-        const _ctx: HandlerContext<T> = ctx as any
-        _ctx.params = parser.params(ctx.pathname, hint)
-        _ctx.query = parser.query(ctx.search || undefined)
-        return handler(_ctx, next)
+        const params = parser.params(ctx.pathname, hint)
+        const query = parser.query(ctx.search || undefined)
+        return handler({ ...ctx, params, query }, next)
       }
     }
     return next(ctx)
