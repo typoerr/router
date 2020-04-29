@@ -1,2 +1,2 @@
 export * from './route'
-export { compose } from './compose'
+export * from './compose'

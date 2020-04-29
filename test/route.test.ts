@@ -1,5 +1,5 @@
 import test from 'ava'
-import { route, HandlerContext } from '@/route'
+import { route, HandlerContext, RouteHandler } from '@/route'
 import { compose } from '@/compose'
 
 function throws<T extends Error>(err: T) {
@@ -14,6 +14,17 @@ test('route(path, handler)', async (t) => {
   t.is(await match({ pathname: '/path' }, next), '/notfound')
 })
 
+test('route(path, ...handler)', async (t) => {
+  t.plan(1)
+  type Context = { message: string }
+  const h1: RouteHandler<Context> = (ctx, next) => next({ ...ctx, message: ctx.message + '!' })
+  const h2: RouteHandler<Context> = (ctx) => t.assert(ctx.message === 'hello!')
+
+  const next = () => '/notfound'
+  const match = route('/', h1, h2)
+  return match({ pathname: '/', message: 'hello' }, next)
+})
+
 test('route(method, path, handler)', async (t) => {
   const match = route('GET', '/', (ctx) => ctx.pathname)
   const next = () => '/notfound'
@@ -23,18 +34,15 @@ test('route(method, path, handler)', async (t) => {
   t.is(await match({ pathname: '/path', method: 'GET' }, next), '/notfound')
 })
 
-test('route level middleware', async (t) => {
+test('route(method, path, ...handler)', async (t) => {
   t.plan(1)
-  type Context = HandlerContext<{ message: string }>
-
-  const handler = compose<Context>([
-    (ctx, next) => next({ ...ctx, message: ctx.message + '!' }),
-    (ctx) => t.assert(ctx.message === 'hello!'),
-  ])
-
+  type Context = { message: string }
+  const h1: RouteHandler<Context> = (ctx, next) => next({ ...ctx, message: ctx.message + '!' })
+  const h2: RouteHandler<Context> = (ctx) => t.assert(ctx.message === 'hello!')
   const next = () => '/notfound'
-  const match = route('/', handler)
-  return match({ pathname: '/', message: 'hello' }, next)
+  const match = route<Context>('GET', '/', h1, h2)
+
+  return match({ pathname: '/', method: 'GET', message: 'hello' }, next)
 })
 
 test('path match', async (t) => {
