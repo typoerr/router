@@ -1,6 +1,7 @@
 import test from 'ava'
 import express from 'express'
 import fetch from 'node-fetch'
+import createError from 'http-errors'
 import * as URL from 'url'
 import { route, compose, ResolveContext } from '@/index'
 import listen from '@typoerr/test-listen'
@@ -22,7 +23,7 @@ server.use(async (req, res, next) => {
   const pathname = _url.pathname || '/'
   const search = _url.search
   const method = req.method
-  const notfound = (ctx: Context) => ctx.res.status(404).send('NotFound')
+  const notfound = () => Promise.reject(createError(404))
   return router({ pathname, search, method, req, res }, notfound).catch(next)
 })
 

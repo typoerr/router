@@ -13,8 +13,7 @@ const router = compose([
 ])
 
 test('match', async (t) => {
-  const loc = dom.window.location
-  const { pathname, search } = loc
+  const { pathname, search } = dom.window.location
   const notfound = () => '/notfound'
   const result = await router({ pathname, search }, notfound)
   t.is(result, 'page1')
