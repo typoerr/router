@@ -19,9 +19,9 @@ const router = compose<ResolveContext<Context>>([
 const server = express()
 
 server.use(async (req, res, next) => {
-  const _url = URL.parse(req.url)
-  const pathname = _url.pathname || '/'
-  const search = _url.search
+  const url = URL.parse(req.url)
+  const pathname = url.pathname || '/'
+  const search = url.search
   const method = req.method
   const notfound = () => Promise.reject(createError(404))
   return router({ pathname, search, method, req, res }, notfound).catch(next)

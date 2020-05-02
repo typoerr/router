@@ -3,18 +3,18 @@ import { Assign, PartialMap } from './utils'
 import * as parser from './parser'
 import { Next, compose } from './compose'
 
-export interface MatchContext {
-  params: PartialMap<string>
-  query: PartialMap<string>
-}
-
-export interface LookUpHint {
+export interface ResolveHint {
   pathname: string
   search?: string | null
   method?: string
 }
 
-export type ResolveContext<T extends object = {}> = Assign<T, LookUpHint>
+export interface MatchContext {
+  params: PartialMap<string>
+  query: PartialMap<string>
+}
+
+export type ResolveContext<T extends object = {}> = Assign<T, ResolveHint>
 
 export type HandlerContext<T extends object = {}> = Assign<ResolveContext<T>, MatchContext>
 
