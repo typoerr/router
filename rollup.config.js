@@ -30,7 +30,9 @@ export default {
     typescript({
       tsconfig,
       // [Issue #287 · rollup/plugins](https://github.com/rollup/plugins/issues/287)
+      module: 'ESNext',
       rootDir: './src',
+      include: ['./src/**/*.ts'],
     }),
   ],
 }

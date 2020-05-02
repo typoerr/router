@@ -8,6 +8,6 @@ export default {
   verbose: true,
   require: ['ts-node/register', 'tsconfig-paths/register'],
   environmentVariables: {
-    TS_NODE_PROJECT: './test/tsconfig.json',
+    TS_NODE_PROJECT: './tsconfig.json',
   },
 }

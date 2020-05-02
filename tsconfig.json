@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "target": "ES2015",
     "lib": [
@@ -21,10 +21,17 @@
     "pretty": true,
     "types": [
       "node",
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
   "include": [
     "src/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
     "node_modules"
