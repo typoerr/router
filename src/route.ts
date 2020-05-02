@@ -35,14 +35,14 @@ export function route<T extends object, U = any>(a: any, b: any, ...c: any): Rou
   const handler = handlers.length > 1 ? compose(handlers) : handlers[0]
   const hint = regexparam(path)
 
-  return async function resolve(ctx: ResolveContext<T>, next: Next<ResolveContext<T>, U>) {
+  return function resolve(ctx: ResolveContext<T>, next: Next<ResolveContext<T>, U>) {
     if (hint.pattern.test(ctx.pathname)) {
       if (method === undefined || method.toLowerCase() === ctx.method?.toLowerCase()) {
         const params = parser.params(ctx.pathname, hint)
         const query = parser.query(ctx.search || undefined)
-        return handler({ ...ctx, params, query }, next as any)
+        return Promise.resolve(handler({ ...ctx, params, query }, next as any))
       }
     }
-    return next(ctx)
+    return Promise.resolve(next(ctx))
   }
 }
