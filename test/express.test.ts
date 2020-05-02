@@ -29,7 +29,7 @@ server.use(async (req, res, next) => {
 
 test('/', (t) => {
   return listen(server, async (url) => {
-    const res = await await fetch(url)
+    const res = await fetch(url)
     t.is(await res.text(), '/')
   })
 })
