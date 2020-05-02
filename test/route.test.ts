@@ -16,10 +16,10 @@ test('route(path, handler)', async (t) => {
 
 test('route(path, ...handler)', async (t) => {
   t.plan(1)
+
   type Context = { message: string }
   const h1: RouteHandler<Context> = (ctx, next) => next({ ...ctx, message: ctx.message + '!' })
   const h2: RouteHandler<Context> = (ctx) => t.assert(ctx.message === 'hello!')
-
   const next = () => '/notfound'
   const match = route('/', h1, h2)
   return match({ pathname: '/', message: 'hello' }, next)
@@ -36,17 +36,18 @@ test('route(method, path, handler)', async (t) => {
 
 test('route(method, path, ...handler)', async (t) => {
   t.plan(1)
+
   type Context = { message: string }
   const h1: RouteHandler<Context> = (ctx, next) => next({ ...ctx, message: ctx.message + '!' })
   const h2: RouteHandler<Context> = (ctx) => t.assert(ctx.message === 'hello!')
   const next = () => '/notfound'
   const match = route<Context>('GET', '/', h1, h2)
-
   return match({ pathname: '/', method: 'GET', message: 'hello' }, next)
 })
 
-test('path match', async (t) => {
+test('composed route - path match', async (t) => {
   t.plan(3)
+
   const callback = (ctx: HandlerContext) => ctx.pathname
   const routes = [route('/a', callback), route('/b', callback), route('/c', callback)]
   const router = compose(routes)
@@ -58,7 +59,7 @@ test('path match', async (t) => {
   }
 })
 
-test('not found rejection', async (t) => {
+test('not found - Promise.reject', async (t) => {
   const router = compose([])
   const next = () => Promise.reject('/notfound')
 
@@ -67,7 +68,7 @@ test('not found rejection', async (t) => {
     .catch((err) => t.is(err, '/notfound'))
 })
 
-test('custom next - error', async (t) => {
+test('not found - throw Error', async (t) => {
   const router = compose([])
   const next = () => throws(new Error('404'))
   const err = await t.throwsAsync(router({}, next))
@@ -79,7 +80,7 @@ test('callback context', (t) => {
 
   const routes = [
     route<{ n: number }, void>('/:id', (ctx) => {
-      // context
+      // user context
       t.is(ctx.n, 1)
       // match context
       t.is(ctx.params.id, '1')
