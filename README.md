@@ -1,5 +1,8 @@
 # @typoerr/router
 
+![npm](https://img.shields.io/npm/v/@typoerr/router?color=blue)
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/@typoerr/router)
+
 Router for Node.js and Browser.
 
 ## Install
@@ -8,55 +11,35 @@ Router for Node.js and Browser.
 npm i @typoerr/router
 ```
 
-## Segments
+https://www.npmjs.com/package/@typoerr/router
 
-See [lukeed/regexparam](https://github.com/lukeed/regexparam)
+## Path expression
+
+See [lukeed/regexparam](https://github.com/lukeed/regexparam).
 
 ## Example
 
-### express
-
 ```ts
-import express from 'express'
-import * as url from 'url'
-import { route, compose, ResolveContext } from '@typoerr/router'
+import { route, compose, ResolveHint } from '@/index'
 
-interface Context {
-  req: express.Request
-  res: express.Response
-}
-
-const router = compose<ResolveContext<Context>>([
-  route('GET', '/', (ctx) => {
-    return ctx.res.send(ctx.req.url)
-  }),
-  route('GET', '/reject', () => {
-    return Promise.reject(new Error('reject'))
-  }),
-  route('GET', '/error', () => {
-    throw new Error('error')
-  }),
+const router = compose([
+  route('GET', '/', (ctx) => ctx.pathname),
+  route('GET', '/err', (ctx) => Promise.reject(ctx.pathname)),
 ])
 
-const server = express()
-
-server.use(async (req, res, next) => {
-  const { pathname, search } = url.parse(req.url)
-  const context = { pathname: pathname || '/', search, method: req.method, req, res }
+async function main(context: ResolveHint) {
   const notfound = () => Promise.reject(new Error('404 NotFound'))
   try {
-    await router(context, notfound)
-  } catch (err) {
+    const reulst = await router(context, notfound)
+    console.assert(result === context.pathname)
+  } catch(err) {
     console.error(err)
-    next(err)
   }
-})
-
-server.listen(3000)
+}
 ```
+
+And See `test/example/*.test.ts`.
 
 ## API
 
-[Todo]
-
-See `test/router.test.ts` and `src/router.ts`
+See `src/route.ts` and `test/route.test.ts`.
