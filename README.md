@@ -20,7 +20,7 @@ See [lukeed/regexparam](https://github.com/lukeed/regexparam).
 ## Example
 
 ```ts
-import { route, compose, ResolveHint } from '@/index'
+import { route, compose, ResolveHint } from '@typoerr/router'
 
 const router = compose([
   route('GET', '/', (ctx) => ctx.pathname),
@@ -43,3 +43,8 @@ And See `test/example/*.test.ts`.
 ## API
 
 See `src/route.ts` and `test/route.test.ts`.
+
+## Inspired
+
+- [serviejs/throwback: An asynchronous middleware pattern](https://github.com/serviejs/throwback)
+- [serviejs/servie-route: Simple route middleware for Servie](https://github.com/serviejs/servie-route)
