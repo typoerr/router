@@ -1,5 +1,4 @@
 import qs from 'querystringify'
-import { PartialMap } from './utils'
 
 /**
  * Return value from regexparam()
@@ -12,8 +11,8 @@ export interface MatchHint {
 /**
  * Parse params
  */
-export function params(path: string, hint: MatchHint): PartialMap<string> {
-  const ret: PartialMap<string> = {}
+export function params(path: string, hint: MatchHint): Partial<Record<string, string>> {
+  const ret: Partial<Record<string, string>> = {}
   const match = hint.pattern.exec(path)
   if (match) {
     for (let i = 0; i < hint.keys.length; i++) {
@@ -26,6 +25,6 @@ export function params(path: string, hint: MatchHint): PartialMap<string> {
 /**
  * Parse query strings
  */
-export function query(search?: string): PartialMap<string> {
+export function query(search?: string): Partial<Record<string, string>> {
   return search ? qs.parse(search) : {}
 }

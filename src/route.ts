@@ -1,5 +1,5 @@
 import regexparam from 'regexparam'
-import { Assign, PartialMap } from './utils'
+import { Assign } from './utils'
 import * as parser from './parser'
 import { Next, compose } from './compose'
 
@@ -10,27 +10,31 @@ export interface ResolveHint {
 }
 
 export interface MatchContext {
-  params: PartialMap<string>
-  query: PartialMap<string>
+  params: Partial<Record<string, string>>
+  query: Partial<Record<string, string>>
 }
 
-export type ResolveContext<T extends object = {}> = Assign<T, ResolveHint>
+export type ResolveContext<T extends Record<string, any>> = Assign<T, ResolveHint>
 
-export type HandlerContext<T extends object = {}> = Assign<ResolveContext<T>, MatchContext>
+export type HandlerContext<T extends Record<string, any>> = Assign<ResolveContext<T>, MatchContext>
 
-export interface RouteHandler<T extends object = {}, U = any> {
+export interface RouteHandler<T extends Record<string, any>, U = any> {
   (context: HandlerContext<T>, next: Next<HandlerContext<T>, U>): Promise<U> | U
 }
 
-export interface Route<T extends object = {}, U = any> {
+export interface Route<T extends Record<string, any>, U = any> {
   (context: ResolveContext<T>, next: Next<ResolveContext<T>, U>): Promise<U>
 }
 
 type METHOD = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'TRACE'
 
-export function route<T extends object, U = any>(method: METHOD, path: string, ...handler: RouteHandler<T, U>[]): Route<T, U>
-export function route<T extends object, U = any>(path: string, ...handler: RouteHandler<T, U>[]): Route<T, U>
-export function route<T extends object, U = any>(a: any, b: any, ...c: any): Route<T, U> {
+export function route<T extends Record<string, any>, U = any>(
+  method: METHOD,
+  path: string,
+  ...handler: RouteHandler<T, U>[]
+): Route<T, U>
+export function route<T extends Record<string, any>, U = any>(path: string, ...handler: RouteHandler<T, U>[]): Route<T, U>
+export function route<T extends Record<string, any>, U = any>(a: any, b: any, ...c: any): Route<T, U> {
   const [method, path, handlers] = typeof b === 'string' ? [a, b, c] : [undefined, a, [b, ...c]]
   const handler = handlers.length > 1 ? compose(handlers) : handlers[0]
   const hint = regexparam(path)

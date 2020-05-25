@@ -42,13 +42,13 @@ test('route(method, path, ...handler)', async (t) => {
   const h2: RouteHandler<Context> = (ctx) => t.assert(ctx.message === 'hello!')
   const next = () => '/notfound'
   const match = route<Context>('GET', '/', h1, h2)
-  return match({ pathname: '/', method: 'GET', message: 'hello' }, next)
+  match({ pathname: '/', method: 'GET', message: 'hello' }, next)
 })
 
 test('composed route - path match', async (t) => {
   t.plan(3)
 
-  const callback = (ctx: HandlerContext) => ctx.pathname
+  const callback = (ctx: HandlerContext<Record<string, any>>) => ctx.pathname
   const routes = [route('/a', callback), route('/b', callback), route('/c', callback)]
   const router = compose(routes)
   const next = () => Promise.resolve('/notfound')
