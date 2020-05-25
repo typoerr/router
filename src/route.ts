@@ -28,13 +28,12 @@ export interface Route<T extends Record<string, any>, U = any> {
 
 type METHOD = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'TRACE'
 
-export function route<T extends Record<string, any>, U = any>(
-  method: METHOD,
-  path: string,
-  ...handler: RouteHandler<T, U>[]
-): Route<T, U>
-export function route<T extends Record<string, any>, U = any>(path: string, ...handler: RouteHandler<T, U>[]): Route<T, U>
-export function route<T extends Record<string, any>, U = any>(a: any, b: any, ...c: any): Route<T, U> {
+export interface RouteFactory {
+  <T extends Record<string, any>, U = any>(method: METHOD, path: string, ...handler: RouteHandler<T, U>[]): Route<T, U>
+  <T extends Record<string, any>, U = any>(path: string, ...handler: RouteHandler<T, U>[]): Route<T, U>
+}
+
+export const route: RouteFactory = <T extends Record<string, any>, U = any>(a: any, b: any, ...c: any): Route<T, U> => {
   const [method, path, handlers] = typeof b === 'string' ? [a, b, c] : [undefined, a, [b, ...c]]
   const handler = handlers.length > 1 ? compose(handlers) : handlers[0]
   const hint = regexparam(path)
