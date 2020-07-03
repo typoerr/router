@@ -96,3 +96,18 @@ test('callback context', (t) => {
   const next = () => t.fail()
   return router({ n: 1, pathname: '/1', search: '?k=v', method: 'GET' }, next)
 })
+
+test('nested route', async (t) => {
+  const routes = compose([
+    route('/a', (ctx) => ctx.pathname),
+    route('/b', (ctx) => ctx.pathname),
+    route('/c', (ctx) => ctx.pathname),
+  ])
+
+  const router = route('*', (ctx, next) => {
+    return routes(ctx, (c) => next({ ...ctx, ...c }))
+  })
+
+  t.assert((await router({ pathname: '/a' }, () => '/notfound')) === '/a')
+  t.assert((await router({ pathname: '/d' }, () => '/notfound')) === '/notfound')
+})
