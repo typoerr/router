@@ -14,14 +14,14 @@ test('route(path, handler)', async (t) => {
   t.is(await match({ pathname: '/path' }, next), '/notfound')
 })
 
-test('route(path, ...handler)', async (t) => {
+test('route(path, handler[])', async (t) => {
   t.plan(1)
 
   type Context = { message: string }
   const h1: RouteHandler<Context> = (ctx, next) => next({ ...ctx, message: ctx.message + '!' })
   const h2: RouteHandler<Context> = (ctx) => t.assert(ctx.message === 'hello!')
   const next = () => '/notfound'
-  const match = route('/', h1, h2)
+  const match = route('/', [h1, h2])
   return match({ pathname: '/', message: 'hello' }, next)
 })
 
@@ -34,14 +34,14 @@ test('route(method, path, handler)', async (t) => {
   t.is(await match({ pathname: '/path', method: 'GET' }, next), '/notfound')
 })
 
-test('route(method, path, ...handler)', async (t) => {
+test('route(method, path, handler[])', async (t) => {
   t.plan(1)
 
   type Context = { message: string }
   const h1: RouteHandler<Context> = (ctx, next) => next({ ...ctx, message: ctx.message + '!' })
   const h2: RouteHandler<Context> = (ctx) => t.assert(ctx.message === 'hello!')
   const next = () => '/notfound'
-  const match = route<Context>('GET', '/', h1, h2)
+  const match = route<Context>('GET', '/', [h1, h2])
   match({ pathname: '/', method: 'GET', message: 'hello' }, next)
 })
 
