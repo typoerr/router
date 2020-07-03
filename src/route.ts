@@ -14,13 +14,13 @@ export interface MatchContext {
   query: Partial<Record<string, string>>
 }
 
-export type ResolveContext<T extends Record<string, any>> = Assign<T, ResolveHint>
-
-export type HandlerContext<T extends Record<string, any>> = Assign<ResolveContext<T>, MatchContext>
+export type HandlerContext<T extends Record<string, any>> = Assign<T, ResolveHint & MatchContext>
 
 export interface RouteHandler<T extends Record<string, any>, U = any> {
   (context: HandlerContext<T>, next: Next<HandlerContext<T>, U>): Promise<U> | U
 }
+
+export type ResolveContext<T extends Record<string, any>> = Assign<T, ResolveHint>
 
 export interface Route<T extends Record<string, any>, U = any> {
   (context: ResolveContext<T>, next: Next<ResolveContext<T>, U>): Promise<U>
